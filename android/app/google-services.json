@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "144772132718",
+    "firebase_url": "https://autoadventures-f318b.firebaseio.com",
+    "project_id": "autoadventures-f318b",
+    "storage_bucket": "autoadventures-f318b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144772132718:android:cc81d53a7cb6c204",
+        "android_client_info": {
+          "package_name": "com.github.pastre.autoadventures"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "144772132718-v43tevl6e0sm6bb0u7v4ks7unactkc1m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfJkvCnb09_xBbNRbQm76wd43VA6RZDM8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
