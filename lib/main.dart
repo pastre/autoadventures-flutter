@@ -3,25 +3,11 @@ import 'dart:convert';
 
 import 'package:autoadventures/io/Api.dart';
 import 'package:autoadventures/io/Storage.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
-final String name = 'project-144772132718';
-final FirebaseOptions options = const FirebaseOptions(
-  googleAppID: '1:144772132718:android:cc81d53a7cb6c204',
-  databaseURL: 'https://autoadventures-f318b.firebaseio.com/',
-  apiKey: 'AIzaSyChXbkwOMbf-UjOFgsQiRJzVYLFJvIXM-0',
-);
-
-FirebaseApp app;
+Api api = Api();
 
 void main() async {
-  await FirebaseApp.configure(name: name, options: options).then((a) {
-    print('CONFIGURED FIREBASE!!!!!');
-    app = a;
-  });
-//  final FirebaseApp app;
   runApp(MyApp());
 }
 
@@ -68,11 +54,19 @@ class HomeWidget extends StatelessWidget {
 }
 
 class Device {
-  String name = 'asd', description = 'asd', id, currentState = 'asd';
+  String name = 'asd', description = 'asd', currentState = 'asd';
+  int  id;
 
   Device(
     this.id,
   );
+
+  Device.fromDict(dict){
+    this.id = dict['id'];
+    this.name = dict['name'].toString();
+    this.description = dict['description'].toString();
+    this.currentState = dict['currentState'].toString();
+  }
 
   String nextValue(){
     if (this.name.contains("cozinha"))
@@ -88,20 +82,11 @@ class DevicesWidget extends StatefulWidget {
 
 class _DevicesWidgetState extends State<DevicesWidget> {
   List<Device> devices;
-  DatabaseReference _devicesRef;
-  FirebaseDatabase database;
 
   @override
   void initState() {
     devices = List<Device>();
-    database = FirebaseDatabase(app: app);
-    _devicesRef = FirebaseDatabase.instance.reference().child('devices/');
-    database.setPersistenceEnabled(true);
-    database.setPersistenceCacheSizeBytes(10000000);
-    _devicesRef.onChildAdded.listen((child) {
-      print('Child is $child');
-      setState(() => this.devices.add(Device(child.snapshot.key)));
-    });
+
 //    _devicesSubscription = _devicesRef.onValue.listen((event){
 //      print(event.snapshot.value);
 //      parseDevices(event.snapshot.value);
@@ -111,7 +96,7 @@ class _DevicesWidgetState extends State<DevicesWidget> {
   @override
   Widget build(BuildContext context) {
     if (devices.isEmpty) {
-//      fetchData();
+      fetchData();
       return ListTile(
         title: Text(' LOADING.......'),
         trailing: IconButton(
@@ -127,6 +112,21 @@ class _DevicesWidgetState extends State<DevicesWidget> {
           return DeviceWidget(devices[index]);
         });
   }
+
+  void fetchData() {
+    api.getDevices().then((devices){
+      print("Devices are $devices");
+      var newList = List<Device>();
+      var parsed = json.decode(devices);
+      parsed.forEach((data){
+        newList.add(Device.fromDict(data));
+      });
+      setState(() {
+        this.devices = newList;
+      });
+    });
+
+  }
 }
 
 class DeviceWidget extends StatefulWidget {
@@ -139,52 +139,31 @@ class DeviceWidget extends StatefulWidget {
 }
 
 class _DeviceWidgetState extends State<DeviceWidget> {
-  Device device = null;
-  bool hasLoaded = false;
 
-  DatabaseReference _devicesRef;
-  FirebaseDatabase database;
-
-  @override
-  void initState() {
-    device = null;
-    hasLoaded = false;
-    print(this.widget.device.id);
-    database = FirebaseDatabase(app: app);
-    _devicesRef = FirebaseDatabase.instance
-        .reference()
-        .child('devices/${this.widget.device.id}');
-    database.setPersistenceEnabled(true);
-    database.setPersistenceCacheSizeBytes(10000000);
-    _devicesRef.onValue.listen((dataSnap) {
-      print('Updating device ${dataSnap.snapshot.value}');
-      Map<dynamic, dynamic> data = dataSnap.snapshot.value;
-      this.setState(() {
-        this.widget.device.name = data['name'];
-        this.widget.device.description = data['_type'];
-        this.widget.device.currentState = data['state'];
-        this.hasLoaded = true;
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (device == null) device = widget.device;
-    if (!hasLoaded)
-      return ListTile(
-        title: Text('LOADING...'),
-      );
 
     return ListTile(
       title: Text(this.widget.device.name),
       trailing: Switch(
-          value: device.currentState == 'on',
+          value: this.widget.device.currentState == '1',
           onChanged: (value) {
-            this._devicesRef.child('state').set(device.nextValue());
+            updateDevice();
           }),
     );
   }
+
+  void updateDevice() {
+    api.updateDevice(this.widget.device.id).then((data){
+      print('Data is $data');
+      this.widget.device = Device.fromDict(json.decode(data));
+      setState(() {
+
+      });
+    });
+  }
+
 }
 
 void showConnetionAlert(BuildContext context) {
